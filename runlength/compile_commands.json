@@ -1,0 +1,36 @@
+[
+  {
+    "file": "main.c",
+    "arguments": [
+      "gcc",
+      "main.c",
+      "-Wextra",
+      "-Wall",
+      "-o",
+      "main"
+    ],
+    "directory": "/home/oliwia/projects/runlength",
+    "output": "main"
+  },
+  {
+    "file": "main.c",
+    "arguments": [
+      "gcc",
+      "-fno-omit-frame-pointer",
+      "-mno-omit-leaf-frame-pointer",
+      "main.c",
+      "-Wextra",
+      "-Wall",
+      "-o",
+      "main",
+      "-B/nix/store/km4g87jxsqxvcq344ncyb8h1i6f3cqxh-glibc-2.40-218/lib/",
+      "-idirafter",
+      "/nix/store/radp574lyk1l05lccg0i4hj4z1p3ig0m-glibc-2.40-218-dev/include",
+      "-idirafter",
+      "/nix/store/k3qc3y1f6i8g2dgz5z0cf00dj4xc5rrv-gcc-14.3.0/lib/gcc/x86_64-unknown-linux-gnu/14.3.0/include-fixed",
+      "-B/nix/store/alrbhz7im0w0jdwcfdgcfk7pxhkl1fzj-gcc-14.3.0-lib/lib"
+    ],
+    "directory": "/home/oliwia/projects/runlength",
+    "output": "main"
+  }
+]
