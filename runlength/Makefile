@@ -1,2 +1,2 @@
 build:
-	gcc main.c -Wextra -Wall -fsanitize=address -o main
+	gcc main.c -Wextra -Wall -o main
