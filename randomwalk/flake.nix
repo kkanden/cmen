@@ -12,9 +12,7 @@
     {
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
-          (raylib.overrideAttrs (prev: {
-            cmakeFlags = prev.cmakeFlags ++ [ "-DGLFW_BUILD_WAYLAND=ON" ];
-          }))
+          raylib
         ];
         shellHook = ''
           exec fish
