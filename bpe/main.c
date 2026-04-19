@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,12 +9,15 @@
 #include "array.h"
 #include "stb_ds.h"
 
-#define LOG 0
+#define LOG 1
 
 typedef unsigned char uchar;
+typedef uint16_t token_t;
+
+#define shift(xs, x) (assert(x > 0), (x)--, *(xs)++)
 
 typedef struct {
-    uchar pair[2];
+    token_t pair[2];
 } Pair;
 
 typedef struct {
@@ -22,7 +26,7 @@ typedef struct {
 } Freq;
 
 typedef struct {
-    uchar key;
+    token_t key;
     Pair value;
 } TokenMap;
 
@@ -32,83 +36,71 @@ typedef struct {
     Freq *items;
 } Freqs;
 
-int compare_freq(const void *a, const void *b) {
-    int x = (int)((Freq *)a)->value;
-    int y = (int)((Freq *)b)->value;
-    if (x < y)
-        return 1;
-    else if (x > y)
-        return -1;
-    else
-        return 0;
+typedef struct {
+    size_t count;
+    size_t capacity;
+    token_t *items;
+} Text;
+
+Text pair_replace(Text text, Pair pair, token_t token) {
+    Text new_text = {0};
+    for (size_t i = 0; i < text.count; i++) {
+        // if we got to the last item, then it was not a replacable pair
+        // just insert it and break
+        if (i == text.count - 1) {
+            da_append(&new_text, text.items[i]);
+            break;
+        }
+        token_t a = text.items[i];
+        token_t b = text.items[i + 1];
+        if (a == pair.pair[0] && b == pair.pair[1]) {
+            da_append(&new_text, token);
+            i++;
+        } else {
+            da_append(&new_text, a);
+        }
+    }
+    return new_text;
 }
 
-char *strreplace(char *str, char *pattern, char *repl) {
-    size_t len = strlen(str);
-    size_t patlen = strlen(pattern);
-    size_t repllen = strlen(repl);
-
-    // count occurrences of pattern in str
-    size_t count = 0;
-    char *tmp = str;
-    while ((tmp = strstr(tmp, pattern))) {
-        count++;
-        tmp += patlen;
+Text token_replace(Text text, token_t token, Pair pair) {
+    Text new_text = {0};
+    for (size_t i = 0; i < text.count; i++) {
+        uint16_t c = text.items[i];
+        if (c == token) {
+            da_append(&new_text, pair.pair[0]);
+            da_append(&new_text, pair.pair[1]);
+        } else {
+            da_append(&new_text, c);
+        }
     }
-
-    if (count == 0)
-        return strdup(str);
-
-    char *ret = calloc(len - count * patlen + count * repllen + 1, 1);
-    ////////////
-    char *p;
-    char *cursor = ret;
-    while ((p = strstr(str, pattern))) {
-        // copy original string
-        memcpy(cursor, str, p - str);
-        cursor += p - str;
-        // copy replacement
-        memcpy(cursor, repl, repllen);
-        cursor += repllen;
-        // adjust target pointer
-        str = p + patlen;
-    }
-    // copy the remaining part
-    memcpy(cursor, str, strlen(str));
-    return ret;
+    return new_text;
 }
 
-char *readfile(char *filename) {
+// input file is read byte-by-byte
+Text readfile(char *filename) {
     FILE *file = fopen(filename, "rb");
     if (!file) {
         perror(filename);
         exit(1);
     }
 
-    // get length of stream
-    fseek(file, 0, SEEK_END);
-    long len = ftell(file);
-    // reset stream
-    rewind(file);
-
-    char *buffer = malloc(len + 1);
-    size_t ret = fread(buffer, 1, len, file);
-    buffer[len] = '\0';
-    if (ret != (size_t)len) {
-        fprintf(stderr, "fread: failed reading file %s\n", filename);
-        exit(1);
+    Text text = {0};
+    uchar byte;
+    while (fread(&byte, 1, 1, file) == 1) {
+        da_append(&text, (token_t)byte);
     }
     fclose(file);
-    return buffer;
+    return text;
 }
 
-void writefile(char *filename, char *text) {
-    FILE *file = fopen(filename, "w");
+void writefile(char *filename, Text text) {
+    FILE *file = fopen(filename, "wb");
     if (!file) {
         perror(filename);
         exit(1);
     }
-    fwrite(text, 1, strlen(text), file);
+    da_foreach(token_t, x, &text) { fwrite(x, 1, sizeof(uint16_t), file); }
     fclose(file);
 };
 
@@ -119,13 +111,25 @@ void writetokens(char *filename, TokenMap *tokens) {
         exit(1);
     }
     for (int i = 0; i < hmlen(tokens); i++) {
-        char line[] = {
-            tokens[i].key,
-            tokens[i].value.pair[0],
-            tokens[i].value.pair[1],
-        };
-        fwrite(line, 1, 3, file);
+        fwrite(&tokens[i].key, 1, sizeof(token_t), file);
+        fwrite(&tokens[i].value.pair, 1, 2 * sizeof(token_t), file);
     }
+}
+
+// bpe file is read using token_t
+Text readbpe(char *filename) {
+    FILE *file = fopen(filename, "rb");
+    if (!file) {
+        perror(filename);
+        exit(1);
+    }
+
+    Text text = {0};
+    token_t token;
+    while (fread(&token, sizeof(token_t), 1, file) == 1) {
+        da_append(&text, token);
+    }
+    return text;
 }
 
 TokenMap *readtokens(char *filename) {
@@ -136,9 +140,9 @@ TokenMap *readtokens(char *filename) {
     }
     TokenMap *tokens = NULL;
 
-    char line[3] = {0};
-    while (fread(&line[0], 1, 3, file) == 3) {
-        uchar key = line[0];
+    token_t line[3] = {0};
+    while (fread(&line[0], sizeof(token_t), 3, file) == 3) {
+        token_t key = line[0];
         Pair pair = {{line[1], line[2]}};
         hmput(tokens, key, pair);
     }
@@ -146,19 +150,11 @@ TokenMap *readtokens(char *filename) {
     return tokens;
 }
 
-#define shift(xs, x) (assert(x > 0), x--, *xs++)
-
-void usage(char *prog) {
-    fprintf(stderr, "Usage: %s <encode|decode> <input> [tknfile]\n", prog);
-    exit(1);
-}
-
-char *encode(char *text, TokenMap **tokens) {
-    for (uchar c = 128; c < 255; c++) {
-        size_t len = strlen(text);
+Text encode(Text text, TokenMap **tokens) {
+    for (token_t c = 256; c < UINT16_MAX; c++) {
         Freq *hm = NULL;
-        for (size_t i = 0; i < len - 1; i++) {
-            Pair pair = {{text[i], text[i + 1]}};
+        for (size_t i = 0; i < text.count - 1; i++) {
+            Pair pair = {{text.items[i], text.items[i + 1]}};
             int index = hmgeti(hm, pair);
             if (index == -1)
                 hmput(hm, pair, 1);
@@ -167,50 +163,52 @@ char *encode(char *text, TokenMap **tokens) {
         }
 
         // get most frequent pair
-        Freqs sorted_freqs = {0};
-        for (int i = 0; i < hmlen(hm); i++) {
-            da_append(&sorted_freqs, hm[i]);
+        Freq most_frequent = hm[0];
+        for (int i = 1; i < hmlen(hm); i++) {
+            if (hm[i].value > most_frequent.value) {
+                most_frequent = hm[i];
+            }
         }
-
-        qsort(sorted_freqs.items, sorted_freqs.count,
-              sizeof(*sorted_freqs.items), compare_freq);
-
         // most frequent pair appears once -- nothing left to replace
-        if (sorted_freqs.items[0].value == 1)
+        if (most_frequent.value == 1)
             break;
 
-        Pair most_frequent = sorted_freqs.items[0].key;
-
 #if LOG == 1
-        printf("---------\n");
-        printf("Iteration %d\n", (int)c - 127);
-        printf("most frequent: [%c%c]\n", most_frequent.pair[0],
-               most_frequent.pair[1]);
-        printf("frequency: %zu\n", sorted_freqs.items[0].value);
+        if (c > 256) {
+            for (int i = 0; i < 3; i++) {
+                printf("\033[1A");
+                printf("\033[2K");
+            }
+        }
+        printf("Iteration %d\n", (int)c - 255);
+        printf("most frequent: [%d,%d]\n", most_frequent.key.pair[0],
+               most_frequent.key.pair[1]);
+        printf("frequency: %zu\n", most_frequent.value);
 #endif
 
-        hmput(*tokens, c, most_frequent);
+        hmput(*tokens, c, most_frequent.key);
 
         // replace in text
-        char pattern[] = {most_frequent.pair[0], most_frequent.pair[1], '\0'};
-        char repl[] = {c, '\0'};
-        char *old = text;
-        text = strreplace(text, pattern, repl);
-        free(old);
+        Text old = text;
+        text = pair_replace(text, most_frequent.key, c);
+        da_free(old);
+        hmfree(hm);
     }
     return text;
 }
 
-char *decode(char *text, TokenMap *tokens) {
-    char *text2 = strdup(text);
+Text decode(Text text, TokenMap *tokens) {
     for (int i = hmlen(tokens) - 1; i >= 0; i--) {
-        char pattern[] = {tokens[i].key, '\0'};
-        char repl[] = {tokens[i].value.pair[0], tokens[i].value.pair[1], '\0'};
-        char *old = text2;
-        text2 = strreplace(text2, pattern, repl);
-        free(old);
+        Text old = text;
+        text = token_replace(text, tokens[i].key, tokens[i].value);
+        da_free(old);
     };
-    return text2;
+    return text;
+}
+
+void usage(char *prog) {
+    fprintf(stderr, "Usage: %s <encode|decode> <input> [tknfile]\n", prog);
+    exit(1);
 }
 
 int main(int argc, char *argv[]) {
@@ -233,14 +231,14 @@ int main(int argc, char *argv[]) {
             usage(program);
         }
     } else {
-        fprintf(stderr, "Invalid argument\n");
+        fprintf(stderr, "Invalid argument: %s\n", what);
         usage(program);
     }
     if (!do_decode) {
         TokenMap *tokens = NULL;
         char *input = shift(argv, argc);
-        char *text = readfile(input);
-        char *enc = encode(text, &tokens);
+        Text text = readfile(input);
+        Text enc = encode(text, &tokens);
 
         // output
         mkdir("output", 0755);
@@ -256,13 +254,14 @@ int main(int argc, char *argv[]) {
     } else {
         char *bpefile = shift(argv, argc);
         char *tknfile = shift(argv, argc);
-        char *text = readfile(bpefile);
+        Text text = readbpe(bpefile);
         TokenMap *tokens = readtokens(tknfile);
 
-        char *dec = decode(text, tokens);
+        Text dec = decode(text, tokens);
 
-        printf("%s", dec);
-        free(text);
-        free(dec);
+        // print decoded to stdout
+        da_foreach(token_t, x, &dec) { putchar((uchar)*x); }
+
+        da_free(dec);
     }
 }
