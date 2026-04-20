@@ -1,0 +1,38 @@
+[
+  {
+    "file": "main.c",
+    "arguments": [
+      "gcc",
+      "-Wextra",
+      "-Wall",
+      "-ggdb",
+      "-o",
+      "main",
+      "main.c"
+    ],
+    "directory": "/home/oliwia/projects/cmen/bpe",
+    "output": "main"
+  },
+  {
+    "file": "main.c",
+    "arguments": [
+      "gcc",
+      "-fno-omit-frame-pointer",
+      "-mno-omit-leaf-frame-pointer",
+      "-Wextra",
+      "-Wall",
+      "-ggdb",
+      "-o",
+      "main",
+      "main.c",
+      "-B/nix/store/pdwlyjkmc6icc0wb5gaw08m9ynqrg683-glibc-2.40-218/lib/",
+      "-idirafter",
+      "/nix/store/903kx9pwhyzswmx1caf7rc8idram9vdq-glibc-2.40-218-dev/include",
+      "-idirafter",
+      "/nix/store/06409a3d2d3b1113zdk9rm5a3ns4rizz-gcc-14.3.0/lib/gcc/x86_64-unknown-linux-gnu/14.3.0/include-fixed",
+      "-B/nix/store/1xw5xccqqh1xw3mvd70hyil6x418wxcm-gcc-14.3.0-lib/lib"
+    ],
+    "directory": "/home/oliwia/projects/cmen/bpe",
+    "output": "main"
+  }
+]
