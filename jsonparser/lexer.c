@@ -4,8 +4,9 @@
 
 #include "lexer.h"
 
-char *token_lit[] = {"LBRACE", "RBRACE", "LBRACK",  "RBRACK", "COLON",  "COMMA",
-                     "STRING", "NUMBER", "BOOLEAN", "EOF",    "ILLEGAL"};
+char *token_lit[] = {"LBRACE",  "RBRACE", "LBRACK", "RBRACK",
+                     "COLON",   "COMMA",  "STRING", "NUMBER",
+                     "BOOLEAN", "NULL",   "EOF",    "ILLEGAL"};
 
 // get (line, col) pair from pos, both one-based
 line_col calc_line_col(String s, size_t pos) {
@@ -22,6 +23,8 @@ line_col calc_line_col(String s, size_t pos) {
     }
     return (line_col){line, col};
 }
+
+void token_free(token *token) { da_free(token->value); }
 
 static char lexer_peek(lexer *lexer) {
     if (lexer->pos >= lexer->buffer.count)
@@ -152,59 +155,61 @@ static void print_error_escaped(char c) {
 
 static void lexer_error(lexer *lexer, char *message) {
     line_col lc = calc_line_col(lexer->buffer, lexer->pos);
-    fprintf(stderr, "ERROR(%s): unexepected character `", message);
+    fprintf(stderr, "[ERROR] Lexer(%s): unexepected character `", message);
     print_error_escaped(lexer->ch);
     fprintf(stderr, "` at line %zu, col %zu\n", lc.line, lc.col);
 }
 
-token lexer_get_token(lexer *lexer) {
+bool lexer_get_token(lexer *lexer, token *token) {
+    bool result = true;
     lexer_skip_ws(lexer);
 
-    token token = {0};
     String lit = {0};
     bool advance = true;
 
     char ch = lexer->ch;
-    token.pos = lexer->pos - 1;
+    token->pos = lexer->pos - 1;
     if (ch == EOF) {
-        token.kind = TOKEN_EOF;
+        token->kind = TOKEN_EOF;
         string_append_cstr(&lit, "EOF");
     } else if (ch == '{') {
-        token.kind = TOKEN_LBRACE;
+        token->kind = TOKEN_LBRACE;
         string_append_cstr(&lit, "{");
     } else if (ch == '}') {
-        token.kind = TOKEN_RBRACE;
+        token->kind = TOKEN_RBRACE;
         string_append_cstr(&lit, "}");
     } else if (ch == '[') {
-        token.kind = TOKEN_LBRACK;
+        token->kind = TOKEN_LBRACK;
         string_append_cstr(&lit, "[");
     } else if (ch == ']') {
-        token.kind = TOKEN_RBRACK;
+        token->kind = TOKEN_RBRACK;
         string_append_cstr(&lit, "]");
     } else if (ch == ':') {
-        token.kind = TOKEN_COLON;
+        token->kind = TOKEN_COLON;
         string_append_cstr(&lit, ":");
     } else if (ch == ',') {
-        token.kind = TOKEN_COMMA;
+        token->kind = TOKEN_COMMA;
         string_append_cstr(&lit, ",");
     } else if (ch == 't' || ch == 'f' || ch == 'n') {
         char *literal;
         switch (ch) {
         case 't':
             literal = "true";
+            token->kind = TOKEN_BOOLEAN;
             break;
         case 'f':
             literal = "false";
+            token->kind = TOKEN_BOOLEAN;
             break;
         case 'n':
             literal = "null";
+            token->kind = TOKEN_NULL;
             break;
         }
         if (!lexer_read_literal(lexer, literal)) {
             lexer_error(lexer, "literal");
-            token.kind = TOKEN_ILLEGAL;
+            token->kind = TOKEN_ILLEGAL;
         } else {
-            token.kind = TOKEN_BOOLEAN;
             string_append_cstr(&lit, literal);
         }
         advance = false;
@@ -212,29 +217,32 @@ token lexer_get_token(lexer *lexer) {
         String str = {0};
         if (!lexer_read_string(lexer, &str)) {
             lexer_error(lexer, "string");
-            token.kind = TOKEN_ILLEGAL;
+            token->kind = TOKEN_ILLEGAL;
         } else {
-            token.kind = TOKEN_STRING;
+            token->kind = TOKEN_STRING;
             string_cat(&lit, &str);
         }
+        da_free(str);
         advance = false;
     } else if (isdigit(ch) || ch == '-') {
         String numstr = {0};
         if (!lexer_read_number(lexer, &numstr)) {
             lexer_error(lexer, "number");
-            token.kind = TOKEN_ILLEGAL;
+            token->kind = TOKEN_ILLEGAL;
         } else {
-            token.kind = TOKEN_NUMBER;
+            token->kind = TOKEN_NUMBER;
             string_cat(&lit, &numstr);
         }
+        da_free(numstr);
         advance = false;
     } else {
         lexer_error(lexer, "illegal");
-        token.kind = TOKEN_ILLEGAL;
+        token->kind = TOKEN_ILLEGAL;
         advance = false;
+        result = false;
     }
-    token.value = lit;
+    token->value = lit;
     if (advance)
         lexer_read(lexer);
-    return token;
+    return result;
 }

@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,9 +16,19 @@
 
 #define TODO(message, ...)                                                     \
     do {                                                                       \
-        fprintf(stderr, "%s:%d: TODO: " message "\n", __FILE__, __LINE__,      \
-                __VA_ARGS__);                                                  \
+        fprintf(stderr, "%s:%d: TODO: " message "\n", __FILE__,                \
+                __LINE__ __VA_OPT__(, ) __VA_ARGS__);                          \
         abort();                                                               \
+    } while (0)
+
+typedef enum { INFO, WARN, ERROR } log_level;
+
+void LOG(log_level level, const char *fmt, ...);
+
+#define return_defer(value)                                                    \
+    do {                                                                       \
+        result = (value);                                                      \
+        goto defer;                                                            \
     } while (0)
 /* UTILS END */
 
@@ -111,6 +122,28 @@ bool read_file(const char *filename, String *s);
 
 #ifdef SMOL_IMPLEMENTATION
 #include <errno.h>
+
+void LOG(log_level level, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    const char *prefix = "";
+    switch (level) {
+    case INFO:
+        prefix = "[INFO] ";
+        break;
+    case WARN:
+        prefix = "[WARNING] ";
+        break;
+    case ERROR:
+        prefix = "[ERROR] ";
+        break;
+    }
+    fprintf(stderr, "%s", prefix);
+    vfprintf(stderr, fmt, args);
+    fprintf(stderr, "\n");
+    va_end(args);
+}
+
 bool read_file(const char *filename, String *s) {
     bool result = true;
     FILE *file = fopen(filename, "rb");

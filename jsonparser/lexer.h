@@ -14,6 +14,7 @@ typedef enum {
     TOKEN_STRING,
     TOKEN_NUMBER,
     TOKEN_BOOLEAN,
+    TOKEN_NULL,
 
     TOKEN_EOF,
     TOKEN_ILLEGAL
@@ -40,5 +41,6 @@ typedef struct {
 
 line_col calc_line_col(String s, size_t pos);
 void lexer_init(lexer *lexer, String text);
-token lexer_get_token(lexer *lexer);
+bool lexer_get_token(lexer *lexer, token *token);
+void token_free(token *token);
 #endif
