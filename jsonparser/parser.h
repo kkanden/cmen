@@ -1,3 +1,5 @@
+#ifndef PARSER_H
+#define PARSER_H
 #include "lexer.h"
 
 typedef enum {
@@ -38,9 +40,10 @@ struct json_object {
 
 typedef struct {
     lexer lexer;
-    token current;
+    token current_token;
 } parser;
 
-void parser_init(parser *parser, String content);
+parser *parser_init(String content);
 void parser_free(parser *parser);
 bool parser_parse(parser *parser, json_object *object);
+#endif

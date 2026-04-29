@@ -24,7 +24,10 @@ line_col calc_line_col(String s, size_t pos) {
     return (line_col){line, col};
 }
 
-void token_free(token *token) { da_free(token->value); }
+void token_free(token *tokenptr) {
+    da_free(&tokenptr->value);
+    *tokenptr = (token){0};
+}
 
 static char lexer_peek(lexer *lexer) {
     if (lexer->pos >= lexer->buffer.count)
@@ -164,32 +167,31 @@ bool lexer_get_token(lexer *lexer, token *token) {
     bool result = true;
     lexer_skip_ws(lexer);
 
-    String lit = {0};
     bool advance = true;
 
     char ch = lexer->ch;
     token->pos = lexer->pos - 1;
     if (ch == EOF) {
         token->kind = TOKEN_EOF;
-        string_append_cstr(&lit, "EOF");
+        string_append_cstr(&token->value, "EOF");
     } else if (ch == '{') {
         token->kind = TOKEN_LBRACE;
-        string_append_cstr(&lit, "{");
+        string_append_cstr(&token->value, "{");
     } else if (ch == '}') {
         token->kind = TOKEN_RBRACE;
-        string_append_cstr(&lit, "}");
+        string_append_cstr(&token->value, "}");
     } else if (ch == '[') {
         token->kind = TOKEN_LBRACK;
-        string_append_cstr(&lit, "[");
+        string_append_cstr(&token->value, "[");
     } else if (ch == ']') {
         token->kind = TOKEN_RBRACK;
-        string_append_cstr(&lit, "]");
+        string_append_cstr(&token->value, "]");
     } else if (ch == ':') {
         token->kind = TOKEN_COLON;
-        string_append_cstr(&lit, ":");
+        string_append_cstr(&token->value, ":");
     } else if (ch == ',') {
         token->kind = TOKEN_COMMA;
-        string_append_cstr(&lit, ",");
+        string_append_cstr(&token->value, ",");
     } else if (ch == 't' || ch == 'f' || ch == 'n') {
         char *literal;
         switch (ch) {
@@ -209,8 +211,9 @@ bool lexer_get_token(lexer *lexer, token *token) {
         if (!lexer_read_literal(lexer, literal)) {
             lexer_error(lexer);
             token->kind = TOKEN_ILLEGAL;
+            result = false;
         } else {
-            string_append_cstr(&lit, literal);
+            string_append_cstr(&token->value, literal);
         }
         advance = false;
     } else if (ch == '"') {
@@ -218,22 +221,24 @@ bool lexer_get_token(lexer *lexer, token *token) {
         if (!lexer_read_string(lexer, &str)) {
             lexer_error(lexer);
             token->kind = TOKEN_ILLEGAL;
+            result = false;
         } else {
             token->kind = TOKEN_STRING;
-            string_cat(&lit, &str);
+            string_cat(&token->value, &str);
         }
-        da_free(str);
+        da_free(&str);
         advance = false;
     } else if (isdigit(ch) || ch == '-') {
         String numstr = {0};
         if (!lexer_read_number(lexer, &numstr)) {
             lexer_error(lexer);
             token->kind = TOKEN_ILLEGAL;
+            result = false;
         } else {
             token->kind = TOKEN_NUMBER;
-            string_cat(&lit, &numstr);
+            string_cat(&token->value, &numstr);
         }
-        da_free(numstr);
+        da_free(&numstr);
         advance = false;
     } else {
         lexer_error(lexer);
@@ -241,8 +246,9 @@ bool lexer_get_token(lexer *lexer, token *token) {
         advance = false;
         result = false;
     }
-    token->value = lit;
+
     if (advance)
         lexer_read(lexer);
+
     return result;
 }

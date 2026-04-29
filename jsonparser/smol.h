@@ -57,7 +57,12 @@ void LOG(log_level level, const char *fmt, ...);
         (da)->items[(da)->count++] = (item);                                   \
     } while (0)
 
-#define da_free(da) free((da).items)
+#define da_free(da)                                                            \
+    do {                                                                       \
+        if ((da)->items != NULL)                                               \
+            free((da)->items);                                                 \
+        (da)->items = NULL;                                                    \
+    } while (0)
 
 // Append several items to a dynamic array
 #define da_append_many(da, new_items, new_items_count)                         \
@@ -103,12 +108,7 @@ typedef struct {
     size_t capacity;
 } String;
 
-#define string_append0(s)                                                      \
-    do {                                                                       \
-        if ((s)->items && (s)->count > 0 && (s)->items[(s)->count - 1] != 0)   \
-            da_append((s), 0);                                                 \
-    } while (0)
-
+#define string_append0(s) da_append((s), '\0')
 #define string_append_cstr(s, s_new) da_append_many((s), (s_new), strlen(s_new))
 #define string_cat(s, s_new) da_append_many((s), (s_new)->items, (s_new)->count)
 #define string_print(s)                                                        \
