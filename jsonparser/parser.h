@@ -7,7 +7,6 @@ typedef enum {
     OBJECT_NULL,
     OBJECT_ARRAY,
     OBJECT_MAP,
-    OBJECT_ILLEGAL
 } json_object_kind;
 
 extern char *object_lit[];

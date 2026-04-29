@@ -153,9 +153,9 @@ static void print_error_escaped(char c) {
     }
 }
 
-static void lexer_error(lexer *lexer, char *message) {
-    line_col lc = calc_line_col(lexer->buffer, lexer->pos);
-    fprintf(stderr, "[ERROR] Lexer(%s): unexepected character `", message);
+static void lexer_error(lexer *lexer) {
+    line_col lc = calc_line_col(lexer->buffer, lexer->pos - 1);
+    fprintf(stderr, "[ERROR] Lexer: unexepected character `");
     print_error_escaped(lexer->ch);
     fprintf(stderr, "` at line %zu, col %zu\n", lc.line, lc.col);
 }
@@ -207,7 +207,7 @@ bool lexer_get_token(lexer *lexer, token *token) {
             break;
         }
         if (!lexer_read_literal(lexer, literal)) {
-            lexer_error(lexer, "literal");
+            lexer_error(lexer);
             token->kind = TOKEN_ILLEGAL;
         } else {
             string_append_cstr(&lit, literal);
@@ -216,7 +216,7 @@ bool lexer_get_token(lexer *lexer, token *token) {
     } else if (ch == '"') {
         String str = {0};
         if (!lexer_read_string(lexer, &str)) {
-            lexer_error(lexer, "string");
+            lexer_error(lexer);
             token->kind = TOKEN_ILLEGAL;
         } else {
             token->kind = TOKEN_STRING;
@@ -227,7 +227,7 @@ bool lexer_get_token(lexer *lexer, token *token) {
     } else if (isdigit(ch) || ch == '-') {
         String numstr = {0};
         if (!lexer_read_number(lexer, &numstr)) {
-            lexer_error(lexer, "number");
+            lexer_error(lexer);
             token->kind = TOKEN_ILLEGAL;
         } else {
             token->kind = TOKEN_NUMBER;
@@ -236,7 +236,7 @@ bool lexer_get_token(lexer *lexer, token *token) {
         da_free(numstr);
         advance = false;
     } else {
-        lexer_error(lexer, "illegal");
+        lexer_error(lexer);
         token->kind = TOKEN_ILLEGAL;
         advance = false;
         result = false;
