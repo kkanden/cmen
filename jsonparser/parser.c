@@ -15,12 +15,14 @@ parser *parser_init(String content) {
     return parserptr;
 }
 
-void parser_free(parser *parser) {
+void parser_free(parser *parserptr) {
     // free the contents of parser
-    da_free(&parser->lexer.buffer);
-    token_free(&parser->current_token);
+    da_free(&parserptr->lexer.buffer);
+    token_free(&parserptr->current_token);
     // free the pointer itself
-    free(parser);
+    free(parserptr);
+    // zero out the pointer
+    parserptr = (parser *){0};
 }
 
 // advances current token
@@ -45,6 +47,8 @@ static bool parser_parse_array(parser *parser, json_object *object) {
             return_defer(false);
         }
         da_append(&object->value.array, element);
+        // zero out after move
+        element = (json_object){0};
 
         parser_next(parser);
 
@@ -64,6 +68,7 @@ static bool parser_parse_array(parser *parser, json_object *object) {
     }
 
 defer:
+    // free the object here only on failure same as in parse_map
     if (!result)
         json_object_free(&element);
 
@@ -77,8 +82,8 @@ static bool parser_parse_map(parser *parser, json_object *object) {
     bool result = true;
     parser_next(parser);
 
-    json_object key_element = (json_object){0};
-    json_object value_element;
+    json_object key_element = {0};
+    json_object value_element = {0};
     while (parser->current_token.kind != TOKEN_RBRACE) {
         if (!parser_parse(parser, &key_element)) {
             return_defer(false);
@@ -107,13 +112,16 @@ static bool parser_parse_map(parser *parser, json_object *object) {
 
         parser_next(parser);
 
-        value_element = (json_object){0};
         if (!parser_parse(parser, &value_element)) {
             return_defer(false);
         }
         json_object *value = malloc(sizeof(json_object));
         *value = value_element;
         hmput(object->value.map, key_element.value.string, value);
+
+        // zero out after move
+        key_element = (json_object){0};
+        value_element = (json_object){0};
 
         parser_next(parser);
         if (parser->current_token.kind == TOKEN_RBRACE)
@@ -131,6 +139,9 @@ static bool parser_parse_map(parser *parser, json_object *object) {
     }
 
 defer:
+    /* we free the objects here only on failure. if the parse was successful the
+     * memory is now owned by the parsed object, which is to be freed separately
+     * by the caller */
     if (!result) {
         json_object_free(&key_element);
         json_object_free(&value_element);

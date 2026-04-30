@@ -26,6 +26,7 @@ line_col calc_line_col(String s, size_t pos) {
 
 void token_free(token *tokenptr) {
     da_free(&tokenptr->value);
+    // zero out the pointer
     *tokenptr = (token){0};
 }
 
@@ -226,6 +227,7 @@ bool lexer_get_token(lexer *lexer, token *token) {
             token->kind = TOKEN_STRING;
             string_cat(&token->value, &str);
         }
+        // memory is copied to the token value so it's safe to free this
         da_free(&str);
         advance = false;
     } else if (isdigit(ch) || ch == '-') {
@@ -238,6 +240,7 @@ bool lexer_get_token(lexer *lexer, token *token) {
             token->kind = TOKEN_NUMBER;
             string_cat(&token->value, &numstr);
         }
+        // memory is copied to the token value so it's safe to free this
         da_free(&numstr);
         advance = false;
     } else {

@@ -1,4 +1,3 @@
-#include <math.h>
 #define SMOL_IMPLEMENTATION
 #include "json.h"
 #include "lexer.h"

@@ -69,9 +69,12 @@ void json_object_free(json_object *object) {
     case OBJECT_MAP:
         for (int i = 0; i < hmlen(object->value.map); i++) {
             json_object_free(object->value.map[i].value);
+
+            // key is strdup'd so we own the memory
             free(object->value.map[i].key);
-            // value is malloced when parsed, so we need to free the pointer
-            // itself
+
+            /* value is malloced when parsed, so we need to free the pointer
+             * itself */
             free(object->value.map[i].value);
         }
         hmfree(object->value.map);
