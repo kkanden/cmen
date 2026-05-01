@@ -1,5 +1,7 @@
 #include "parser.h"
+#include "smol.h"
 #include "stb_ds.h"
+
 #include <math.h>
 
 void json_print(json_object object, int indent) {
@@ -86,4 +88,20 @@ void json_object_free(json_object *object) {
     default: // other objects are not heap-allocated
         break;
     }
+}
+
+bool json_from_string(String file_content, json_object *object) {
+    bool result = true;
+    parser *parser = parser_init(file_content);
+
+    if (!parser_parse(parser, object)) {
+        return_defer(false);
+    }
+
+defer:
+    parser_free(parser);
+    if (!result)
+        json_object_free(object);
+
+    return result;
 }

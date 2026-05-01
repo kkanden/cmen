@@ -1,3 +1,6 @@
+#ifndef SMOL_H
+#define SMOL_H
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -119,6 +122,7 @@ typedef struct {
 /* STRINGS END */
 
 bool read_file(const char *filename, String *s);
+bool read_stdin(String *s);
 
 #ifdef SMOL_IMPLEMENTATION
 #include <errno.h>
@@ -181,4 +185,23 @@ defer:
         fclose(file);
     return result;
 }
+
+bool read_stdin(String *s) {
+    bool result = true;
+    char buf[4096] = {0};
+    size_t bytes_read;
+
+    while ((bytes_read = fread(buf, 1, sizeof(buf), stdin)) > 0) {
+        da_append_many(s, buf, bytes_read);
+    }
+
+    if (ferror(stdin))
+        return_defer(false);
+
+defer:
+    if (!result)
+        fprintf(stderr, "Failed reading from stdin: %s\n", strerror(errno));
+    return result;
+}
+#endif
 #endif

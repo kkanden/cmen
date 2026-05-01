@@ -6,54 +6,15 @@
       "-Wall",
       "-Wextra",
       "-g",
+      "-Isrc",
+      "-Iinclude",
+      "-c",
+      "main.c",
       "-o",
-      "main",
-      "main.c"
+      "build/main.o"
     ],
     "directory": "/home/oliwia/projects/cmen/jsonparser",
-    "output": "main"
-  },
-  {
-    "file": "lexer.c",
-    "arguments": [
-      "gcc",
-      "-Wall",
-      "-Wextra",
-      "-g",
-      "-o",
-      "main",
-      "lexer.c"
-    ],
-    "directory": "/home/oliwia/projects/cmen/jsonparser",
-    "output": "main"
-  },
-  {
-    "file": "parser.c",
-    "arguments": [
-      "gcc",
-      "-Wall",
-      "-Wextra",
-      "-g",
-      "-o",
-      "main",
-      "parser.c"
-    ],
-    "directory": "/home/oliwia/projects/cmen/jsonparser",
-    "output": "main"
-  },
-  {
-    "file": "json.c",
-    "arguments": [
-      "gcc",
-      "-Wall",
-      "-Wextra",
-      "-g",
-      "-o",
-      "main",
-      "json.c"
-    ],
-    "directory": "/home/oliwia/projects/cmen/jsonparser",
-    "output": "main"
+    "output": "build/main.o"
   },
   {
     "file": "main.c",
@@ -64,31 +25,12 @@
       "-Wall",
       "-Wextra",
       "-g",
-      "-o",
-      "main",
+      "-Isrc",
+      "-Iinclude",
+      "-c",
       "main.c",
-      "-B/nix/store/pdwlyjkmc6icc0wb5gaw08m9ynqrg683-glibc-2.40-218/lib/",
-      "-idirafter",
-      "/nix/store/903kx9pwhyzswmx1caf7rc8idram9vdq-glibc-2.40-218-dev/include",
-      "-idirafter",
-      "/nix/store/06409a3d2d3b1113zdk9rm5a3ns4rizz-gcc-14.3.0/lib/gcc/x86_64-unknown-linux-gnu/14.3.0/include-fixed",
-      "-B/nix/store/1xw5xccqqh1xw3mvd70hyil6x418wxcm-gcc-14.3.0-lib/lib"
-    ],
-    "directory": "/home/oliwia/projects/cmen/jsonparser",
-    "output": "main"
-  },
-  {
-    "file": "lexer.c",
-    "arguments": [
-      "gcc",
-      "-fno-omit-frame-pointer",
-      "-mno-omit-leaf-frame-pointer",
-      "-Wall",
-      "-Wextra",
-      "-g",
       "-o",
-      "main",
-      "lexer.c",
+      "build/main.o",
       "-B/nix/store/pdwlyjkmc6icc0wb5gaw08m9ynqrg683-glibc-2.40-218/lib/",
       "-idirafter",
       "/nix/store/903kx9pwhyzswmx1caf7rc8idram9vdq-glibc-2.40-218-dev/include",
@@ -97,50 +39,6 @@
       "-B/nix/store/1xw5xccqqh1xw3mvd70hyil6x418wxcm-gcc-14.3.0-lib/lib"
     ],
     "directory": "/home/oliwia/projects/cmen/jsonparser",
-    "output": "main"
-  },
-  {
-    "file": "parser.c",
-    "arguments": [
-      "gcc",
-      "-fno-omit-frame-pointer",
-      "-mno-omit-leaf-frame-pointer",
-      "-Wall",
-      "-Wextra",
-      "-g",
-      "-o",
-      "main",
-      "parser.c",
-      "-B/nix/store/pdwlyjkmc6icc0wb5gaw08m9ynqrg683-glibc-2.40-218/lib/",
-      "-idirafter",
-      "/nix/store/903kx9pwhyzswmx1caf7rc8idram9vdq-glibc-2.40-218-dev/include",
-      "-idirafter",
-      "/nix/store/06409a3d2d3b1113zdk9rm5a3ns4rizz-gcc-14.3.0/lib/gcc/x86_64-unknown-linux-gnu/14.3.0/include-fixed",
-      "-B/nix/store/1xw5xccqqh1xw3mvd70hyil6x418wxcm-gcc-14.3.0-lib/lib"
-    ],
-    "directory": "/home/oliwia/projects/cmen/jsonparser",
-    "output": "main"
-  },
-  {
-    "file": "json.c",
-    "arguments": [
-      "gcc",
-      "-fno-omit-frame-pointer",
-      "-mno-omit-leaf-frame-pointer",
-      "-Wall",
-      "-Wextra",
-      "-g",
-      "-o",
-      "main",
-      "json.c",
-      "-B/nix/store/pdwlyjkmc6icc0wb5gaw08m9ynqrg683-glibc-2.40-218/lib/",
-      "-idirafter",
-      "/nix/store/903kx9pwhyzswmx1caf7rc8idram9vdq-glibc-2.40-218-dev/include",
-      "-idirafter",
-      "/nix/store/06409a3d2d3b1113zdk9rm5a3ns4rizz-gcc-14.3.0/lib/gcc/x86_64-unknown-linux-gnu/14.3.0/include-fixed",
-      "-B/nix/store/1xw5xccqqh1xw3mvd70hyil6x418wxcm-gcc-14.3.0-lib/lib"
-    ],
-    "directory": "/home/oliwia/projects/cmen/jsonparser",
-    "output": "main"
+    "output": "build/main.o"
   }
 ]
