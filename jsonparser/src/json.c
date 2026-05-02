@@ -2,7 +2,7 @@
 #include "smol.h"
 #include "stb_ds.h"
 
-#include <math.h>
+#include <float.h>
 
 char *object_lit[] = {"STRING", "NUMBER", "BOOLEAN", "NULL", "ARRAY", "MAP"};
 
@@ -15,9 +15,7 @@ void json_print(json_object object, int indent) {
         printf("\"%s\"", object.value.string);
         break;
     case OBJECT_NUMBER:
-        printf("%.*f",
-               (object.value.number == floorf(object.value.number)) ? 0 : 6,
-               object.value.number);
+        printf("%g", object.value.number);
         break;
     case OBJECT_BOOLEAN:
         printf("%s", object.value.boolean ? "true" : "false");
