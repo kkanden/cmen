@@ -36,6 +36,14 @@ int main(int argc, char **argv) {
 
     json_print(object, 0);
 
+    if (object.kind == OBJECT_ARRAY) {
+        printf("it's an array\n");
+        json_print(object.value.array.items[0], 0);
+    } else {
+        printf("not an array\n");
+        printf("object kind: %s\n", object_lit[object.kind]);
+    }
+
 defer:
     json_object_free(&object);
 

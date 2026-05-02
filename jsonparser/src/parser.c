@@ -4,8 +4,6 @@
 #include "stb_ds.h"
 #include <string.h>
 
-char *object_lit[] = {"STRING", "NUMBER", "BOOLEAN", "NULL", "ARRAY", "MAP"};
-
 parser *parser_init(String content) {
     parser *parserptr = (parser *)malloc(sizeof(parser));
     parserptr->lexer = (lexer){0};

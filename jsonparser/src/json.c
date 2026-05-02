@@ -4,6 +4,8 @@
 
 #include <math.h>
 
+char *object_lit[] = {"STRING", "NUMBER", "BOOLEAN", "NULL", "ARRAY", "MAP"};
+
 void json_print(json_object object, int indent) {
     static int depth = 0;
     depth++;
