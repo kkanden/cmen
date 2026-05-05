@@ -4,7 +4,8 @@
 
 #include <float.h>
 
-char *object_lit[] = {"STRING", "NUMBER", "BOOLEAN", "NULL", "ARRAY", "MAP"};
+char *object_lit[] = {"UNINITIALIZED", "STRING", "NUMBER", "BOOLEAN",
+                      "NULL",          "ARRAY",  "MAP"};
 
 void json_print(json_object object, int indent) {
     static int depth = 0;
@@ -52,6 +53,8 @@ void json_print(json_object object, int indent) {
         }
         printf("]");
         break;
+    case OBJECT_UNINITIALIZED:
+        break;
     }
 
     if (depth == 1)
@@ -85,7 +88,8 @@ void json_object_free(json_object *object) {
         free(object->value.string);
         object->value.string = NULL;
         break;
-    default: // other objects are not heap-allocated
+    default: // other objects are not heap-allocated or object is not
+             // initialized
         break;
     }
 }

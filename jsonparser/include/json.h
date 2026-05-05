@@ -5,6 +5,7 @@
 extern char *object_lit[];
 
 typedef enum {
+    OBJECT_UNINITIALIZED,
     OBJECT_STRING,
     OBJECT_NUMBER,
     OBJECT_BOOLEAN,
