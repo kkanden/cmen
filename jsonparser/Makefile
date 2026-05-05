@@ -1,5 +1,12 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -g -Isrc -Iinclude -lm
+CFLAGS = -Wall -Wextra -Isrc -Iinclude -fPIC
+LDLIBS = -lm
+
+ifdef RELEASE
+  CFLAGS += -O2
+else
+  CFLAGS += -g
+endif
 
 BUILD_DIR = build
 
@@ -7,15 +14,20 @@ SRCS = $(wildcard src/*.c)
 OBJS = $(patsubst src/%.c, $(BUILD_DIR)/%.o, $(SRCS))
 
 LIB = $(BUILD_DIR)/libjson.a
+SHAREDLIB = $(BUILD_DIR)/libjson.so
 BIN = $(BUILD_DIR)/main
 
-.PHONY: all lib clean
+.PHONY: all lib solib clean
 
 all: $(BIN)
 lib: $(LIB)
+solib: $(SHAREDLIB)
 
 $(BIN): $(BUILD_DIR)/main.o $(LIB)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
+
+$(SHAREDLIB): $(OBJS)
+	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDLIBS)
 
 $(LIB): $(OBJS)
 	ar rcs $@ $^
