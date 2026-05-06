@@ -61,6 +61,8 @@ void json_print(json_object object, int indent) {
         printf("\n");
 }
 
+void json_dump(json_object object) { json_print(object, 0); }
+
 void json_object_free(json_object *object) {
     switch (object->kind) {
     case OBJECT_ARRAY:

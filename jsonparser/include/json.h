@@ -40,6 +40,7 @@ struct json_object {
 };
 
 void json_print(json_object object, int indent);
+void json_dump(json_object object);
 void json_object_free(json_object *object);
 bool json_from_string(String file_content, json_object *object);
 
