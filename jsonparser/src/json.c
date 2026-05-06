@@ -96,9 +96,12 @@ void json_object_free(json_object *object) {
     }
 }
 
-bool json_from_string(String file_content, json_object *object) {
+// `file_content` does not necessarily have to be nul-terminated
+bool json_from_string(char *file_content, json_object *object) {
+    String content = {0};
+    string_append_cstr(&content, file_content);
     bool result = true;
-    parser *parser = parser_init(file_content);
+    parser *parser = parser_init(content);
 
     if (!parser_parse(parser, object)) {
         return_defer(false);

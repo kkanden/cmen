@@ -28,9 +28,10 @@ int main(int argc, char **argv) {
 
     json_object object = {0};
 
-    /* memory of content is owned by the lexer which is freed by parser_free in
-       json_from_string */
-    if (!json_from_string(content, &object)) {
+    /* the content string is internally turned into a smol.h's `String` object
+       whose memory is then owned by the parser object which is freed right
+       after parsing. the input string ownership is left untouched. */
+    if (!json_from_string(content.items, &object)) {
         return_defer(1);
     }
 
